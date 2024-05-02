@@ -48,6 +48,7 @@ namespace hash {
 
 		~HashTable();
 
+		int hash_to_roman(const string& roman);
 	};
 
 	template <typename T>
@@ -80,8 +81,8 @@ namespace hash {
 	template<typename T>
 	inline int HashTable<T>::hash(int key) const {
 		const double value_a = 0.6180339887;
-		double fractionalPart = value_a * key - int(A * key);
-		int result = _capacity * fractionalPart
+		double fractionalPart = value_a * key - int(value_a * key);
+		int result = _capacity * fractionalPart;
 		return result;
 	}
 
@@ -108,7 +109,7 @@ namespace hash {
 		Node* new_hash_table = new Node[new_size];
 		for (int i = 0; i < _capacity; ++i) {
 			if (!_hash_table[i]._deleted) {
-				int new_position = hash(table[i]._key) % new_size;
+				int new_position = hash(_hash_table[i]._key) % new_size;
 				while (!new_hash_table[new_position]._deleted) {
 					new_position = (new_position + 1) % new_size;
 				}
@@ -213,6 +214,40 @@ namespace hash {
 
 	template<typename T>
 	inline HashTable<T>::~HashTable() {
-		delete[] table;
+		delete[] _hash_table;
+	}
+
+	template<typename T>
+	inline int HashTable<T>::hash_to_roman(const string& roman) {
+		const char roman_symbols[] = { 'I', 'V', 'X', 'L', 'C', 'D', 'M' };
+		const int roman_values[] = { 1, 5, 10, 50, 100, 500, 1000 };
+		int result = 0;
+		int prev_value = 0;
+
+		for (int i = roman.size() - 1; i >= 0; --i) {
+			char symbol = roman[i];
+			int value = 0;
+			for (int j = 0; j < sizeof(roman_symbols); ++j) {
+				if (roman_symbols[j] == symbol) {
+					value = roman_values[j];
+					break;
+				}
+			}
+
+			if (value < prev_value) {
+				result -= value;
+			}
+			else {
+				result += value;
+			}
+
+			prev_value = value;
+		}
+
+		const double value_a = 0.6180339887;
+		double fractional_part = value_a * result - int(value_a * result);
+		int hash_result = _capacity * fractional_part;
+
+		return hash_result;
 	}
 }
