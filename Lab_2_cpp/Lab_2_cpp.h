@@ -19,7 +19,7 @@ namespace hash {
 		Node* _hash_table;
 		int _capacity;
 		int _size;
-		
+		  
 		int find_the_position(int key) const;
 		int hash(int key) const;
 		void resize(int new_size);
@@ -81,8 +81,8 @@ namespace hash {
 	template<typename T>
 	inline int HashTable<T>::hash(int key) const {
 		const double value_a = 0.6180339887;
-		double fractionalPart = value_a * key - int(value_a * key);
-		int result = _capacity * fractionalPart;
+		double fractional_part = value_a * key - int(value_a * key);
+		int result = _capacity * fractional_part;
 		return result;
 	}
 
@@ -139,7 +139,7 @@ namespace hash {
 
 	template<typename T>
 	inline void HashTable<T>::insert_or_assign(int key, const T& value) {
-		if (_size >= 0.7 * _capacity) {
+		if (_size >= 0.75 * _capacity) {
 			resize(2 * _capacity);
 		}
 		int position = hash(key) % _capacity;
@@ -181,7 +181,7 @@ namespace hash {
 	template<typename T>
 	inline int HashTable<T>::count(int key) const {
 		int counter = 0;
-		int position = hash(key) % -capacity;
+		int position = hash(key) % _capacity;
 		while (!_hash_table[position]._deleted && (_hash_table[position]._key != key || _hash_table[position]._deleted)) {
 			if (_hash_table[position]._key == key) {
 				++counter;
@@ -221,33 +221,48 @@ namespace hash {
 	inline int HashTable<T>::hash_to_roman(const string& roman) {
 		const char roman_symbols[] = { 'I', 'V', 'X', 'L', 'C', 'D', 'M' };
 		const int roman_values[] = { 1, 5, 10, 50, 100, 500, 1000 };
+		const string invalid_combinations[] = { "IIII", "VV", "XXXX", "LL", "CCCC", "DD", "MMMM" };
 		int result = 0;
 		int prev_value = 0;
+
+		for (const auto& combination : invalid_combinations) {
+			if (roman.find(combination) != string::npos) {
+				return 0;
+			}
+		}
 
 		for (int i = roman.size() - 1; i >= 0; --i) {
 			char symbol = roman[i];
 			int value = 0;
+			bool valid_symbol = false;
+
 			for (int j = 0; j < sizeof(roman_symbols); ++j) {
 				if (roman_symbols[j] == symbol) {
 					value = roman_values[j];
+					valid_symbol = true;
 					break;
 				}
 			}
 
+			if (!valid_symbol) {
+				return 0;
+			}
+
 			if (value < prev_value) {
+				if (!((prev_value == 5 && (value == 1 || value == 10)) ||
+					(prev_value == 10 && (value == 1 || value == 50)) ||
+					(prev_value == 50 && (value == 10 || value == 100)) ||
+					(prev_value == 100 && (value == 10 || value == 500)) ||
+					(prev_value == 500 && (value == 100 || value == 1000)))) {
+					return 0;
+				}
 				result -= value;
 			}
 			else {
 				result += value;
 			}
-
 			prev_value = value;
 		}
-
-		const double value_a = 0.6180339887;
-		double fractional_part = value_a * result - int(value_a * result);
-		int hash_result = _capacity * fractional_part;
-
-		return hash_result;
+		return result;
 	}
 }
