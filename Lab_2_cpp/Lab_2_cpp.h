@@ -19,7 +19,7 @@ namespace hash {
 		Node* _hash_table;
 		int _capacity;
 		int _size;
-		  
+
 		int find_the_position(int key) const;
 		int hash(int key) const;
 		void resize(int new_size);
@@ -57,7 +57,7 @@ namespace hash {
 	}
 
 	template<typename T>
-    HashTable<T>::HashTable(const HashTable& other) : _size(other._size), _capacity(other._capacity) {
+	HashTable<T>::HashTable(const HashTable& other) : _size(other._size), _capacity(other._capacity) {
 		_hash_table = new Node[_capacity];
 		for (int i = 0; i < _capacity; ++i) {
 			_hash_table[i] = other._hash_table[i];
@@ -118,23 +118,31 @@ namespace hash {
 		}
 		delete[] _hash_table;
 		_hash_table = new_hash_table;
-		_capacity = new_size;
+		_size = new_size;
 	}
 
 	template<typename T>
 	inline void HashTable<T>::insert(int key, const T& value) {
-		if (_size >= 0.75 * _capacity) {
+		if (_size >= 0.7 * _capacity) {
 			resize(2 * _capacity);
 		}
-		int position = hash(key) % _capacity;
-		while (!_hash_table[position]._deleted && _hash_table[position]._key != key) {
-			position = (position + 1) % _capacity;
-		}
-		if (_hash_table[position]._deleted) {
+		int pos = hash(key) % _capacity;
+		int initialPos = pos;
+		do {
+			if (_hash_table[pos]._key == key && !_hash_table[pos]._deleted) {
+				return;
+			}
+			if (_hash_table[pos]._deleted) {
+				break;
+			}
+			pos = (pos + 1) % _capacity;
+		} while (pos != initialPos);
+
+		if (_hash_table[pos]._deleted) {
 			++_size;
 		}
-		_hash_table[position] = Node(key, value);
-		_hash_table[position]._deleted = false;
+		_hash_table[pos] = Node(key, value);
+		_hash_table[pos]._deleted = false;
 	}
 
 	template<typename T>
@@ -160,6 +168,23 @@ namespace hash {
 	}
 
 	template<typename T>
+	inline int HashTable<T>::count(int key) const {
+		int hash_value = hash(key);
+		int initial_position = hash_value % _capacity;
+		int position = initial_position;
+		int collision_count = 0;
+
+		do {
+			if (_hash_table[position]._key != key && !_hash_table[position]._deleted && hash(_hash_table[position]._key) == hash_value) {
+				++collision_count;
+			}
+			position = (position + 1) % _capacity;
+		} while (position != initial_position);
+
+		return collision_count;
+	}
+
+	template<typename T>
 	inline bool HashTable<T>::contains(const T& value) const {
 		for (int i = 0; i < _capacity; ++i) {
 			if (!_hash_table[i]._deleted && _hash_table[i]._ value == value) {
@@ -178,24 +203,14 @@ namespace hash {
 		return nullptr;
 	}
 
-	template<typename T>
-	inline int HashTable<T>::count(int key) const {
-		int counter = 0;
-		int position = hash(key) % _capacity;
-		while (!_hash_table[position]._deleted && (_hash_table[position]._key != key || _hash_table[position]._deleted)) {
-			if (_hash_table[position]._key == key) {
-				++counter;
-			}
-			position = (position + 1) % _capacity;
-		}
-		return counter;
-	}
+	
+
 
 	template<typename T>
 	inline void HashTable<T>::print() const {
 		for (int i = 0; i < _capacity; ++i) {
 			if (!_hash_table[i]._deleted) {
-				cout << "Ключ: " << _hash_table[i]._key << endl; 
+				cout << "Ключ: " << _hash_table[i]._key << endl;
 				cout << "Значение: " << _hash_table[i]._value << endl;
 			}
 		}
@@ -222,6 +237,7 @@ namespace hash {
 		const char roman_symbols[] = { 'I', 'V', 'X', 'L', 'C', 'D', 'M' };
 		const int roman_values[] = { 1, 5, 10, 50, 100, 500, 1000 };
 		const string invalid_combinations[] = { "IIII", "VV", "XXXX", "LL", "CCCC", "DD", "MMMM" };
+
 		int result = 0;
 		int prev_value = 0;
 
@@ -243,17 +259,16 @@ namespace hash {
 					break;
 				}
 			}
-
 			if (!valid_symbol) {
 				return 0;
 			}
-
 			if (value < prev_value) {
-				if (!((prev_value == 5 && (value == 1 || value == 10)) ||
-					(prev_value == 10 && (value == 1 || value == 50)) ||
-					(prev_value == 50 && (value == 10 || value == 100)) ||
-					(prev_value == 100 && (value == 10 || value == 500)) ||
-					(prev_value == 500 && (value == 100 || value == 1000)))) {
+				if (!((prev_value == 5 && value == 1) ||
+					(prev_value == 10 && (value == 1 || value == 5)) ||
+					(prev_value == 50 && value == 10) ||
+					(prev_value == 100 && (value == 10 || value == 50)) ||
+					(prev_value == 500 && value == 100) ||
+					(prev_value == 1000 && value == 100))) {
 					return 0;
 				}
 				result -= value;

@@ -15,12 +15,16 @@ int main()
     hashTable.insert(41, 1300);
     hashTable.insert(52, 343);
     hashTable.insert(150, 3403);
-    hashTable.insert(68, 542);
+    hashTable.insert(65, 3404);
+    hashTable.insert(73, 3555);
+  /*  hashTable.insert(65, 3405);
+    hashTable.insert(65, 2);
+    hashTable.insert(52, 0);*/
     hashTable.print();
 
     cout << endl;
 
-    string roman1 = "IIX";
+    string roman1 = "CMX";
     string roman2 = "XVIII";
     string roman3 = "XLII";
 
@@ -32,5 +36,12 @@ int main()
     cout << "Римское число " << roman2 << ": " << hashResult2 << endl;
     cout << "Римское число " << roman3 << ": " << hashResult3 << endl;
 
-	return 0;
+    cout << endl;
+    cout << endl;
+
+
+    auto counter_collisions = hashTable.count(52);
+    cout << counter_collisions;
+
+    return 0;
 }
